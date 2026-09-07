@@ -453,20 +453,20 @@
             const sekFilter = document.getElementById('filter-sekolah').value;
 
             let filtered = dataSiswa.filter(s => {
-                let tingkatStr = (s.tingkat_kelas || '').toUpperCase();
-                let kelasGoStr = (s.kelas_go || '').toUpperCase();
+                let tingkatStr = (s.tingkat_kelas || '').toUpperCase().trim();
+                let kelasGoStr = (s.kelas_go || '').toUpperCase().trim();
                 
-                // Cek kategori tingkat berdasarkan aturan spesifik
-                let isSD = tingkatStr.includes('SD') || kelasGoStr.includes(' SD') || kelasGoStr.includes('4') || kelasGoStr.includes('5') || kelasGoStr.includes('6');
-                let isSMP = tingkatStr.includes('SMP') || kelasGoStr.includes('SMP') || kelasGoStr.includes('7') || kelasGoStr.includes('8') || kelasGoStr.includes('9');
-                let isSMA = tingkatStr.includes('SMA') || kelasGoStr.includes('SMA') || kelasGoStr.includes('UMUM') || kelasGoStr.includes('SNBT') || kelasGoStr.includes('10') || kelasGoStr.includes('11') || kelasGoStr.includes('12');
+                // Klasifikasi ketat berdasarkan kolom tingkat_kelas sesuai permintaan
+                let isSD = tingkatStr.includes('4 SD') || tingkatStr.includes('5 SD') || tingkatStr.includes('6 SD') || tingkatStr.includes('SD');
+                let isSMP = tingkatStr.includes('7 SMP') || tingkatStr.includes('8 SMP') || tingkatStr.includes('9 SMP') || tingkatStr.includes('SMP');
+                let isSMA = tingkatStr.includes('10 UMUM') || tingkatStr.includes('11 UMUM') || tingkatStr.includes('12 UMUM') || tingkatStr.includes('12 SNBT') || tingkatStr.includes('SMA');
 
                 let matchTk = true;
                 if (tkFilter === 'SD') matchTk = isSD;
                 else if (tkFilter === 'SMP') matchTk = isSMP;
                 else if (tkFilter === 'SMA') matchTk = isSMA;
 
-                let matchSek = sekFilter === 'ALL' || s.asal_sekolah === sekFilter;
+                let matchSek = sekFilter === 'ALL' || (s.asal_sekolah || '').trim() === sekFilter;
                 return matchTk && matchSek && s.tgl_daftar;
             });
 
@@ -479,15 +479,15 @@
                         monthMap[monthKey] = { SD: 0, SMP: 0, SMA: 0 };
                     }
                     
-                    const tk = (s.tingkat_kelas || '').toUpperCase();
-                    const kg = (s.kelas_go || '').toUpperCase();
+                    const tk = (s.tingkat_kelas || '').toUpperCase().trim();
+                    const kg = (s.kelas_go || '').toUpperCase().trim();
                     
-                    // Deteksi kategori spesifik
-                    if (tk.includes('SD') || kg.includes('4') || kg.includes('5') || kg.includes('6')) {
+                    // Rincian kategori berdasarkan tingkat_kelas persis
+                    if (tk.includes('4 SD') || tk.includes('5 SD') || tk.includes('6 SD') || tk.includes('SD') || kg.includes('4') || kg.includes('5') || kg.includes('6')) {
                         monthMap[monthKey].SD++;
-                    } else if (tk.includes('SMP') || kg.includes('7') || kg.includes('8') || kg.includes('9')) {
+                    } else if (tk.includes('7 SMP') || tk.includes('8 SMP') || tk.includes('9 SMP') || tk.includes('SMP') || kg.includes('7') || kg.includes('8') || kg.includes('9')) {
                         monthMap[monthKey].SMP++;
-                    } else if (tk.includes('SMA') || kg.includes('10') || kg.includes('11') || kg.includes('12') || kg.includes('UMUM') || kg.includes('SNBT')) {
+                    } else if (tk.includes('10 UMUM') || tk.includes('11 UMUM') || tk.includes('12 UMUM') || tk.includes('12 SNBT') || tk.includes('SMA') || kg.includes('UMUM') || kg.includes('SNBT') || kg.includes('10') || kg.includes('11') || kg.includes('12')) {
                         monthMap[monthKey].SMA++;
                     }
                 }
@@ -507,7 +507,7 @@
             const datasets = [];
             if (tkFilter === 'ALL' || tkFilter === 'SD') {
                 datasets.push({
-                    label: 'Tingkat SD (4, 5, 6 SD)',
+                    label: 'Jenjang SD (4 SD, 5 SD, 6 SD)',
                     data: dataSD,
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -518,7 +518,7 @@
             }
             if (tkFilter === 'ALL' || tkFilter === 'SMP') {
                 datasets.push({
-                    label: 'Tingkat SMP (7, 8, 9 SMP)',
+                    label: 'Jenjang SMP (7 SMP, 8 SMP, 9 SMP)',
                     data: dataSMP,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -529,7 +529,7 @@
             }
             if (tkFilter === 'ALL' || tkFilter === 'SMA') {
                 datasets.push({
-                    label: 'Tingkat SMA (10, 11, 12 UMUM & SNBT)',
+                    label: 'Jenjang SMA (10/11/12 UMUM & 12 SNBT)',
                     data: dataSMA,
                     borderColor: '#e21c2b',
                     backgroundColor: 'rgba(226, 28, 43, 0.1)',
