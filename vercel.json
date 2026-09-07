@@ -1,41 +1,4 @@
 {
-  "version": 2,
-  "name": "go-sumenep-login",
-  "builds": [
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
-  "cleanUrls": true,
-  "trailingSlash": false
+"cleanUrls": true,
+"trailingSlash": false
 }
-```eof
-
-### Cara Mengupload ke Vercel
-
-Karena Anda memiliki tiga file (`index.html`, gambar logo `logo GO Standar.png`, dan `vercel.json`), ada dua cara termudah untuk mengunggahnya ke Vercel:
-
-**Cara 1: Metode Drag and Drop (Paling Mudah & Cepat)**
-1. Buat sebuah folder baru di komputer Anda (misalnya beri nama `web-go-sumenep`).
-2. Masukkan ketiga file tersebut ke dalam folder itu.
-   * `index.html` (berisi kode halaman login)
-   * `logo GO Standar.png` (file gambar logo Anda)
-   * `vercel.json` (kode di atas)
-3. Buka halaman dashboard Vercel ([https://vercel.com/dashboard](https://vercel.com/dashboard)).
-4. Klik tombol **Add New...** > **Project**.
-5. Di bagian paling bawah halaman, cari area **"Drag and drop your project here"** (Tarik dan lepas proyek Anda ke sini).
-6. Tarik folder `web-go-sumenep` yang baru Anda buat ke area tersebut. Vercel akan langsung memproses dan memberikan URL website Anda.
-
-**Cara 2: Melalui GitHub (Direkomendasikan untuk Jangka Panjang)**
-1. Buat *repository* baru di akun GitHub Anda.
-2. *Upload* ketiga file tersebut ke *repository* itu.
-3. Buka Vercel, klik **Add New...** > **Project**.
-4. Di bawah tulisan "Import Git Repository", cari *repository* GitHub yang baru Anda buat, lalu klik **Import**.
-5. Klik **Deploy** dan biarkan Vercel bekerja. Keuntungannya, jika nanti Anda mengubah kode di GitHub, Vercel akan otomatis memperbaruinya.
