@@ -91,7 +91,7 @@
     </div>
 
     <script>
-        // MASUKKAN URL APPS SCRIPT ANDA DI SINI
+        // URL Apps Script Anda
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHTEqSxYruOyjWips4dVembVzDP2G7rizAtYANYV2ET3yhFr6lYdFMyO2UuS5PYvXe/exec';
 
         const loginForm = document.getElementById('loginForm');
@@ -100,43 +100,42 @@
         const messageBox = document.getElementById('messageBox');
         const usernameSelect = document.getElementById('username');
 
-        // Fungsi untuk mengambil data dengan penanganan error yang muncul di layar
-        async function loadUsernames() {
-            try {
-                usernameSelect.innerHTML = '<option value="" disabled selected>Menyambungkan ke database...</option>';
-                
-                const url = `${APPS_SCRIPT_URL}?action=getUsers`;
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.success && data.users && data.users.length > 0) {
+        // Fungsi mengambil data username menggunakan JSONP agar aman dari CORS
+        function loadUsernames() {
+            const script = document.createElement('script');
+            const callbackName = 'handleUsers_' + Math.round(100000 * Math.random());
+
+            window[callbackName] = function(response) {
+                if (response && response.success && response.users && response.users.length > 0) {
                     usernameSelect.innerHTML = '<option value="" disabled selected>Pilih Username Anda</option>';
-                    data.users.forEach(user => {
+                    response.users.forEach(user => {
                         const option = document.createElement('option');
                         option.value = user;
                         option.textContent = user;
                         usernameSelect.appendChild(option);
                     });
-                    showMessage('', ''); // bersihkan pesan error
                 } else {
-                    usernameSelect.innerHTML = '<option value="" disabled selected>Data tidak ditemukan</option>';
-                    showMessage(data.message || 'Gagal memuat. Pastikan Sheet bernama "admin" (huruf kecil).', 'error');
+                    usernameSelect.innerHTML = '<option value="" disabled selected>Gagal memuat daftar username</option>';
+                    showMessage(response.message || 'Sheet admin kosong atau salah format.', 'error');
                 }
-            } catch (error) {
-                console.error("Fetch error:", error);
-                usernameSelect.innerHTML = '<option value="" disabled selected>Akses ditolak (Cek Izin Apps Script)</option>';
-                showMessage('ERROR KONEKSI: Buka Apps Script > Kelola Penerapan > Edit > pastikan "Who has access" adalah "Anyone" (Siapa saja).', 'error');
-            }
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
+
+            script.src = `${APPS_SCRIPT_URL}?action=getUsers&callback=${callbackName}`;
+            script.onerror = () => {
+                usernameSelect.innerHTML = '<option value="" disabled selected>Koneksi error</option>';
+                showMessage('Gagal menghubungkan ke server Apps Script.', 'error');
+            };
+
+            document.body.appendChild(script);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('AKfycbz_XXXXXXXXXXXX_g')) {
-                usernameSelect.innerHTML = '<option value="" disabled selected>URL Apps Script belum diatur</option>';
-                return;
-            }
             loadUsernames();
         });
 
+        // Proses Login
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault(); 
             
@@ -153,8 +152,6 @@
             showMessage('', ''); 
 
             try {
-                // Untuk login, karena menggunakan POST sering bermasalah dengan CORS,
-                // kita gunakan GET request standard.
                 const url = new URL(APPS_SCRIPT_URL);
                 url.searchParams.append('action', 'login');
                 url.searchParams.append('username', username);
@@ -162,26 +159,29 @@
 
                 const response = await fetch(url.toString(), {
                     method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'Accept': 'application/json' }
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    showMessage('Login berhasil! Mengalihkan...', 'success');
+                    showMessage('Login berhasil! Mengalihkan ke dashboard...', 'success');
+                    
+                    // Simpan nama user yang sedang login ke localStorage agar terbaca di dashboard
+                    localStorage.setItem('go_username', username);
+
+                    // Redirect nyata ke file dashboard.html
                     setTimeout(() => {
-                        alert('Simulasi: Redirect ke Dashboard');
-                        // window.location.href = 'dashboard.html'; // Ganti dengan URL tujuan sebenarnya
-                    }, 1500);
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
                 } else {
                     showMessage(data.message || 'Username atau NIK salah', 'error');
+                    submitBtn.disabled = false;
+                    loadingSpinner.classList.add('hidden');
                 }
             } catch (error) {
                 console.error('Error Login:', error);
-                showMessage('Terjadi kesalahan jaringan atau CORS. Coba lagi nanti.', 'error');
-            } finally {
+                showMessage('Terjadi kesalahan jaringan.', 'error');
                 submitBtn.disabled = false;
                 loadingSpinner.classList.add('hidden');
             }
