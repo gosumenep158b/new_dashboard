@@ -100,19 +100,32 @@
         const messageBox = document.getElementById('messageBox');
         const usernameSelect = document.getElementById('username');
 
-        // Fungsi Global untuk menerima data JSONP
-        function handleUsersData(data) {
-            if (data && data.success && data.users && data.users.length > 0) {
-                usernameSelect.innerHTML = '<option value="" disabled selected>Pilih Username Anda</option>';
-                data.users.forEach(user => {
-                    const option = document.createElement('option');
-                    option.value = user;
-                    option.textContent = user;
-                    usernameSelect.appendChild(option);
-                });
-            } else {
-                usernameSelect.innerHTML = '<option value="" disabled selected>Gagal memuat atau data kosong</option>';
-                showMessage('Gagal memuat username dari database. Pastikan nama Sheet adalah "admin".', 'error');
+        // Fungsi untuk mengambil data dengan penanganan error yang muncul di layar
+        async function loadUsernames() {
+            try {
+                usernameSelect.innerHTML = '<option value="" disabled selected>Menyambungkan ke database...</option>';
+                
+                const url = `${APPS_SCRIPT_URL}?action=getUsers`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.users && data.users.length > 0) {
+                    usernameSelect.innerHTML = '<option value="" disabled selected>Pilih Username Anda</option>';
+                    data.users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user;
+                        option.textContent = user;
+                        usernameSelect.appendChild(option);
+                    });
+                    showMessage('', ''); // bersihkan pesan error
+                } else {
+                    usernameSelect.innerHTML = '<option value="" disabled selected>Data tidak ditemukan</option>';
+                    showMessage(data.message || 'Gagal memuat. Pastikan Sheet bernama "admin" (huruf kecil).', 'error');
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+                usernameSelect.innerHTML = '<option value="" disabled selected>Akses ditolak (Cek Izin Apps Script)</option>';
+                showMessage('ERROR KONEKSI: Buka Apps Script > Kelola Penerapan > Edit > pastikan "Who has access" adalah "Anyone" (Siapa saja).', 'error');
             }
         }
 
@@ -121,15 +134,7 @@
                 usernameSelect.innerHTML = '<option value="" disabled selected>URL Apps Script belum diatur</option>';
                 return;
             }
-            
-            // MENGGUNAKAN TEKNIK JSONP UNTUK BYPASS CORS
-            const script = document.createElement('script');
-            // Menambahkan parameter action=getUsers dan callback=handleUsersData
-            script.src = `${APPS_SCRIPT_URL}?action=getUsers&callback=handleUsersData`;
-            script.onerror = function() {
-                usernameSelect.innerHTML = '<option value="" disabled selected>Koneksi ke server gagal</option>';
-            };
-            document.body.appendChild(script);
+            loadUsernames();
         });
 
         loginForm.addEventListener('submit', async (e) => {
