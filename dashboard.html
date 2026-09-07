@@ -45,6 +45,12 @@
                     </button>
                 </li>
                 <li>
+                    <button onclick="switchTab('nilai-100')" id="nav-nilai-100" class="w-full flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-award w-6 text-center"></i>
+                        <span class="ml-3 font-medium">Perolehan Nilai 100</span>
+                    </button>
+                </li>
+                <li>
                     <button onclick="switchTab('input-siswa')" id="nav-input-siswa" class="w-full flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
                         <i class="fas fa-user-plus w-6 text-center"></i>
                         <span class="ml-3 font-medium">Input/Edit Siswa</span>
@@ -73,7 +79,7 @@
             <div class="flex items-center space-x-4">
                 <div class="text-sm text-right hidden sm:block">
                     <p class="font-medium text-gray-800" id="user-display">Selamat datang,</p>
-                    <p class="text-gray-500 text-xs">GO Sumenep</p>
+                    <p class="text-gray-500 text-xs" id="user-role-badge">GO Sumenep</p>
                 </div>
                 <div class="w-10 h-10 rounded-full bg-go-red text-white flex items-center justify-center font-bold">
                     GO
@@ -193,6 +199,99 @@
                 </div>
             </div>
 
+            <!-- TAB: NILAI 100 -->
+            <div id="tab-nilai-100" class="hidden space-y-6">
+                <!-- Header / Filter Superuser -->
+                <div class="glass-card rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Manajemen Perolehan Nilai 100</h2>
+                        <p class="text-xs text-gray-500 mt-1" id="nilai-100-subtitle">Monitoring pencapaian akademik dan Management by Exception (MBE)</p>
+                    </div>
+                    <div id="superuser-filter-container" class="hidden flex items-center space-x-2 w-full md:w-auto">
+                        <label class="text-sm font-medium text-gray-600 whitespace-nowrap">Filter PT:</label>
+                        <select id="filter-pt-nilai" onchange="renderNilai100Tab()" class="border-gray-300 rounded-lg text-sm p-2 focus:ring-go-red focus:border-go-red w-full md:w-48">
+                            <option value="ALL">Semua PT</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Statistik Nilai 100 -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass-card rounded-xl p-6 border-l-4 border-blue-500">
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">Total Siswa Terdata</h3>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-n100-total">0</p>
+                    </div>
+                    <div class="glass-card rounded-xl p-6 border-l-4 border-green-500">
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">Akumulasi Nilai 100</h3>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-n100-akumulasi">0</p>
+                    </div>
+                    <div class="glass-card rounded-xl p-6 border-l-4 border-yellow-500">
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">Sudah Dapat Nilai 100</h3>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-n100-sudah">0</p>
+                    </div>
+                    <div class="glass-card rounded-xl p-6 border-l-4 border-go-red">
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">Belum Dapat (MBE)</h3>
+                        <p class="text-3xl font-bold text-go-red" id="stat-n100-mbe">0</p>
+                    </div>
+                </div>
+
+                <!-- Bagian MBE (Management by Exception) Khusus PT / Overview Superuser -->
+                <div class="glass-card rounded-xl p-6 border-t-4 border-go-red">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-exclamation-triangle text-go-red mr-2"></i> Siswa Belum Mendapat Nilai 100 (MBE)
+                            </h3>
+                            <p class="text-xs text-gray-500">Daftar siswa yang memerlukan perhatian khusus beserta action plan penuntasannya.</p>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">No Reg / Nama</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Kelas GO & PT</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Asal Sekolah</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Status Pembayaran</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Action Plan</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Deadline</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-mbe-body" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="6" class="text-center py-4 text-gray-500 italic">Memuat data MBE...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabel Keseluruhan Nilai 100 -->
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
+                        <h3 class="text-lg font-bold text-gray-800">Detail Rekapitulasi Nilai 100 Siswa</h3>
+                        <input type="text" id="search-nilai" placeholder="Cari siswa, no reg, sekolah..." class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-full sm:w-72 focus:ring-go-red focus:border-go-red outline-none" onkeyup="renderNilai100TableOnly()">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-3 text-center font-medium text-gray-500 uppercase">No</th>
+                                    <th class="px-3 py-3 text-left font-medium text-gray-500 uppercase">No Reg / Nama Siswa</th>
+                                    <th class="px-3 py-3 text-left font-medium text-gray-500 uppercase">Asal Sekolah</th>
+                                    <th class="px-3 py-3 text-left font-medium text-gray-500 uppercase">PT / Kelas</th>
+                                    <th class="px-3 py-3 text-center font-medium text-gray-500 uppercase">Status Bayar</th>
+                                    <th class="px-3 py-3 text-center font-medium text-gray-500 uppercase">Akumulasi 100</th>
+                                    <th class="px-3 py-3 text-left font-medium text-gray-500 uppercase">Kuis/Tugas/PR/Proyek</th>
+                                    <th class="px-3 py-3 text-left font-medium text-gray-500 uppercase">UH/PTS/PAS/PAT</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-nilai-body" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="8" class="text-center py-4 text-gray-500 italic">Memuat data nilai...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- TAB: INPUT/EDIT SISWA -->
             <div id="tab-input-siswa" class="hidden">
                 <div class="glass-card rounded-xl p-6 max-w-4xl mx-auto">
@@ -284,42 +383,55 @@
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHTEqSxYruOyjWips4dVembVzDP2G7rizAtYANYV2ET3yhFr6lYdFMyO2UuS5PYvXe/exec';
         
         let dataSiswa = [];
+        let dataNilai100 = [];
         let chartInstance = null;
         let currentUser = localStorage.getItem('go_username') || 'Admin';
+        let isSuperUser = currentUser.toLowerCase() === 'superuser' || currentUser.toLowerCase() === 'admin pusat' || currentUser.toLowerCase() === 'super admin';
 
         const loadingOverlay = document.getElementById('loading-overlay');
         const tabDashboard = document.getElementById('tab-dashboard');
         const tabDataSiswa = document.getElementById('tab-data-siswa');
+        const tabNilai100 = document.getElementById('tab-nilai-100');
         const tabInputSiswa = document.getElementById('tab-input-siswa');
         
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('user-display').textContent = `Halo, ${currentUser}`;
+            document.getElementById('user-role-badge').textContent = isSuperUser ? 'Superuser / Pusat' : 'Pengajar / PT';
             document.getElementById('inp_nama_PT').value = currentUser;
-            fetchData();
+            
+            if (isSuperUser) {
+                document.getElementById('superuser-filter-container').classList.remove('hidden');
+            }
+
+            fetchAllData();
         });
 
-        function fetchData() {
+        function fetchAllData() {
             loadingOverlay.classList.remove('hidden');
             const script = document.createElement('script');
-            const callbackName = 'handleDataSiswa_' + Math.round(100000 * Math.random());
+            const callbackName = 'handleAllData_' + Math.round(100000 * Math.random());
             
             window[callbackName] = function(response) {
                 loadingOverlay.classList.add('hidden');
                 if (response && response.success) {
-                    dataSiswa = response.data;
+                    dataSiswa = response.dataSiswa || [];
+                    dataNilai100 = response.dataNilai100 || [];
+                    
                     processDashboard();
                     renderTable();
+                    populatePTFilter();
+                    renderNilai100Tab();
                 } else {
-                    showToast(response.message || 'Gagal memuat data dari server.', 'error');
+                    showToast(response.message || 'Gagal memuat data.', 'error');
                 }
                 delete window[callbackName];
                 document.body.removeChild(script);
             };
 
-            script.src = `${APPS_SCRIPT_URL}?action=getStudents&callback=${callbackName}`;
+            script.src = `${APPS_SCRIPT_URL}?action=getAllData&callback=${callbackName}`;
             script.onerror = () => {
                 loadingOverlay.classList.add('hidden');
-                showToast('Error koneksi. Pastikan sheet "siswa" tersedia.', 'error');
+                showToast('Error koneksi ke Apps Script.', 'error');
             };
             
             document.body.appendChild(script);
@@ -589,21 +701,28 @@
         function switchTab(tabId) {
             tabDashboard.classList.add('hidden');
             tabDataSiswa.classList.add('hidden');
+            tabNilai100.classList.add('hidden');
             tabInputSiswa.classList.add('hidden');
             
-            ['dashboard', 'data-siswa', 'input-siswa'].forEach(id => {
-                document.getElementById(`nav-${id}`).classList.remove('nav-active', 'text-gray-600');
-                document.getElementById(`nav-${id}`).classList.add('text-gray-600');
+            ['dashboard', 'data-siswa', 'nilai-100', 'input-siswa'].forEach(id => {
+                const el = document.getElementById(`nav-${id}`);
+                if(el) {
+                    el.classList.remove('nav-active', 'text-gray-600');
+                    el.classList.add('text-gray-600');
+                }
             });
 
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
             const activeNav = document.getElementById(`nav-${tabId}`);
-            activeNav.classList.add('nav-active');
-            activeNav.classList.remove('text-gray-600');
+            if(activeNav) {
+                activeNav.classList.add('nav-active');
+                activeNav.classList.remove('text-gray-600');
+            }
             
             const titles = {
                 'dashboard': 'Dashboard Overview',
                 'data-siswa': 'Database Siswa',
+                'nilai-100': 'Perolehan Nilai 100 & MBE',
                 'input-siswa': 'Input / Edit Data Siswa'
             };
             document.getElementById('page-title').textContent = titles[tabId];
@@ -611,6 +730,154 @@
             if(window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('hidden');
             }
+        }
+
+        // === FUNGSI TAB NILAI 100 & MBE ===
+        function populatePTFilter() {
+            if (!isSuperUser) return;
+            const filterPtSelect = document.getElementById('filter-pt-nilai');
+            const ptSet = new Set(dataSiswa.map(s => s.nama_PT).filter(Boolean));
+            
+            filterPtSelect.innerHTML = '<option value="ALL">Semua PT</option>';
+            Array.from(ptSet).sort().forEach(pt => {
+                filterPtSelect.innerHTML += `<option value="${pt}">${pt}</option>`;
+            });
+        }
+
+        function renderNilai100Tab() {
+            let activeSiswa = dataSiswa;
+            let activeNilai = dataNilai100;
+
+            if (!isSuperUser) {
+                // Filter ketat sesuai PT (nama_PT di sheet siswa sama dengan currentUser)
+                activeSiswa = dataSiswa.filter(s => String(s.nama_PT || '').trim().toLowerCase() === String(currentUser).trim().toLowerCase());
+                const regSet = new Set(activeSiswa.map(s => String(s.no_reg).trim()));
+                activeNilai = dataNilai100.filter(n => regSet.has(String(n.no_reg).trim()));
+            } else {
+                const selectedPT = document.getElementById('filter-pt-nilai').value;
+                if (selectedPT !== 'ALL') {
+                    activeSiswa = dataSiswa.filter(s => String(s.nama_PT || '').trim() === selectedPT);
+                    const regSet = new Set(activeSiswa.map(s => String(s.no_reg).trim()));
+                    activeNilai = dataNilai100.filter(n => regSet.has(String(n.no_reg).trim()));
+                }
+            }
+
+            // Hitung Statistik
+            const totalSiswa = activeSiswa.length;
+            let totalAkumulasi = 0;
+            let sudahDapat = 0;
+
+            const nilaiMap = {};
+            activeNilai.forEach(n => {
+                nilaiMap[String(n.no_reg).trim()] = n;
+                const akum = parseInt(n.akumulasi_nilai_100 || n.Akumulasi_Nilai_100 || 0) || 0;
+                totalAkumulasi += akum;
+                if (akum > 0) sudahDapat++;
+            });
+
+            const belumDapat = Math.max(0, totalSiswa - sudahDapat);
+
+            document.getElementById('stat-n100-total').textContent = totalSiswa;
+            document.getElementById('stat-n100-akumulasi').textContent = totalAkumulasi;
+            document.getElementById('stat-n100-sudah').textContent = sudahDapat;
+            document.getElementById('stat-n100-mbe').textContent = belumDapat;
+
+            renderMBETable(activeSiswa, nilaiMap);
+            renderNilai100Table(activeSiswa, activeNilai);
+        }
+
+        function renderMBETable(siswaList, nilaiMap) {
+            const tbody = document.getElementById('table-mbe-body');
+            // Siswa yang belum dapat nilai 100 atau akumulasi 0
+            const mbeList = siswaList.filter(s => {
+                const n = nilaiMap[String(s.no_reg).trim()];
+                const akum = n ? (parseInt(n.akumulasi_nilai_100 || n.Akumulasi_Nilai_100 || 0) || 0) : 0;
+                return akum === 0;
+            });
+
+            if (mbeList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-green-600 font-medium">Luar biasa! Semua siswa sudah memiliki perolehan nilai 100.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = mbeList.map(s => {
+                const n = nilaiMap[String(s.no_reg).trim()] || {};
+                const statusBayar = n.status_pembayaran || n.Status_Pembayaran || 'Lunas';
+                // Action plan default jika kosong
+                const actionPlan = n.action_plan || 'Pemberian tugas remidi target 100 dan bimbingan intensif kuis';
+                const deadline = n.tanggal_penuntasan || n.Tanggal_Penuntasan || '2026-06-30';
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3">
+                            <span class="font-bold text-gray-900">${s.nama_siswa}</span>
+                            <br><span class="text-xs text-gray-500">${s.no_reg}</span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-700">
+                            <span class="font-semibold">${s.kelas_go || '-'}</span>
+                            <br><span class="text-xs text-go-red font-medium">PT: ${s.nama_PT || '-'}</span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-600">${s.asal_sekolah || '-'}</td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-semibold">${statusBayar}</span></td>
+                        <td class="px-4 py-3 text-gray-800 text-xs font-medium">${actionPlan}</td>
+                        <td class="px-4 py-3 text-red-600 font-bold text-xs whitespace-nowrap">${deadline}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderNilai100Table(siswaList, nilaiList) {
+            window._cachedSiswa = siswaList;
+            window._cachedNilai = nilaiList;
+            renderNilai100TableOnly();
+        }
+
+        function renderNilai100TableOnly() {
+            const siswaList = window._cachedSiswa || [];
+            const nilaiList = window._cachedNilai || [];
+            const tbody = document.getElementById('table-nilai-body');
+            const search = document.getElementById('search-nilai').value.toLowerCase();
+
+            const nilaiMap = {};
+            nilaiList.forEach(n => { nilaiMap[String(n.no_reg).trim()] = n; });
+
+            const filtered = siswaList.filter(s => 
+                (s.nama_siswa || '').toLowerCase().includes(search) || 
+                (s.no_reg || '').toString().toLowerCase().includes(search) ||
+                (s.asal_sekolah || '').toLowerCase().includes(search)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-500 italic">Tidak ada data siswa ditemukan.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((s, idx) => {
+                const n = nilaiMap[String(s.no_reg).trim()] || {};
+                const statusBayar = n.status_pembayaran || n.Status_Pembayaran || '-';
+                const akum = n.akumulasi_nilai_100 || n.Akumulasi_Nilai_100 || 0;
+                const kuis = n.kuis_tugas_pr_proyek || n['Kuis/Tugas/PR/Proyek'] || '-';
+                const uh = n.uh_pts_pas_pat || n['UH/PTS/PAS/PAT'] || '-';
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 py-3 text-center text-gray-500 font-medium">${idx + 1}</td>
+                        <td class="px-3 py-3">
+                            <span class="font-bold text-gray-900">${s.nama_siswa}</span>
+                            <br><span class="text-xs text-gray-500">${s.no_reg}</span>
+                        </td>
+                        <td class="px-3 py-3 text-gray-600">${s.asal_sekolah || '-'}</td>
+                        <td class="px-3 py-3 text-gray-700">
+                            <span class="font-semibold">${s.kelas_go || '-'}</span>
+                            <br><span class="text-xs text-gray-400">PT: ${s.nama_PT || '-'}</span>
+                        </td>
+                        <td class="px-3 py-3 text-center"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-semibold">${statusBayar}</span></td>
+                        <td class="px-3 py-3 text-center font-bold text-go-red text-base">${akum}</td>
+                        <td class="px-3 py-3 text-xs text-gray-600">${kuis}</td>
+                        <td class="px-3 py-3 text-xs text-gray-600">${uh}</td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function toggleSidebar() {
