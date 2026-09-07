@@ -243,14 +243,13 @@
                                     <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">No Reg / Nama</th>
                                     <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Kelas GO & PT</th>
                                     <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Asal Sekolah</th>
-                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Status Bayar</th>
                                     <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Action Plan (Input PT)</th>
                                     <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Deadline (Input PT)</th>
                                     <th class="px-4 py-3 text-center font-medium text-gray-500 uppercase">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="table-mbe-body" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="7" class="text-center py-4 text-gray-500 italic">Memuat data MBE...</td></tr>
+                                <tr><td colspan="6" class="text-center py-4 text-gray-500 italic">Memuat data MBE...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -270,14 +269,13 @@
                                     <th class="px-3 py-3 text-left font-medium text-gray-500 uppercase">No Reg / Nama Siswa</th>
                                     <th class="px-3 py-3 text-left font-medium text-gray-500 uppercase">Asal Sekolah</th>
                                     <th class="px-3 py-3 text-left font-medium text-gray-500 uppercase">PT / Kelas</th>
-                                    <th class="px-3 py-3 text-center font-medium text-gray-500 uppercase">Status Bayar</th>
                                     <th class="px-3 py-3 text-center font-medium text-gray-500 uppercase">Akumulasi 100</th>
                                     <th class="px-3 py-3 text-left font-medium text-gray-500 uppercase">Kuis/Tugas/PR/Proyek</th>
                                     <th class="px-3 py-3 text-left font-medium text-gray-500 uppercase">UH/PTS/PAS/PAT</th>
                                 </tr>
                             </thead>
                             <tbody id="table-nilai-body" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="8" class="text-center py-4 text-gray-500 italic">Memuat data nilai...</td></tr>
+                                <tr><td colspan="7" class="text-center py-4 text-gray-500 italic">Memuat data nilai...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -767,8 +765,13 @@
 
             const nilaiMap = {};
             activeNilai.forEach(n => {
-                nilaiMap[String(n.no_reg).trim()] = n;
-                const akum = parseInt(n.akumulasi_nilai_100 || n.Akumulasi_Nilai_100 || 0) || 0;
+                const nReg = String(n.no_reg || n.No_Reg || '').trim();
+                nilaiMap[nReg] = n;
+                
+                // Cek berbagai kemungkinan variasi nama kolom Akumulasi
+                const rawAkum = n.akumulasi_nilai_100 ?? n.Akumulasi_Nilai_100 ?? n['Akumulasi Nilai 100'] ?? 0;
+                const akum = parseInt(rawAkum) || 0;
+                
                 totalAkumulasi += akum;
                 if (akum > 0) sudahDapat++;
             });
@@ -787,21 +790,21 @@
         function renderMBETable(siswaList, nilaiMap) {
             const tbody = document.getElementById('table-mbe-body');
             const mbeList = siswaList.filter(s => {
-                const n = nilaiMap[String(s.no_reg).trim()];
-                const akum = n ? (parseInt(n.akumulasi_nilai_100 || n.Akumulasi_Nilai_100 || 0) || 0) : 0;
+                const n = nilaiMap[String(s.no_reg).trim()] || {};
+                const rawAkum = n.akumulasi_nilai_100 ?? n.Akumulasi_Nilai_100 ?? n['Akumulasi Nilai 100'] ?? 0;
+                const akum = parseInt(rawAkum) || 0;
                 return akum === 0;
             });
 
             if (mbeList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-green-600 font-medium">Luar biasa! Semua siswa pada filter ini sudah memiliki perolehan nilai 100.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-green-600 font-medium">Luar biasa! Semua siswa pada filter ini sudah memiliki perolehan nilai 100.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = mbeList.map(s => {
                 const n = nilaiMap[String(s.no_reg).trim()] || {};
-                const statusBayar = n.status_pembayaran || n.Status_Pembayaran || 'Lunas';
-                const actionPlan = n.action_plan || n.Action_Plan || '';
-                const deadline = n.tanggal_penuntasan || n.Tanggal_Penuntasan || n.deadline || '';
+                const actionPlan = n.action_plan || n.Action_Plan || n['Action Plan'] || '';
+                const deadline = n.tanggal_penuntasan || n.Tanggal_Penuntasan || n.deadline || n.Deadline || '';
                 const regNo = s.no_reg;
 
                 return `
@@ -815,7 +818,6 @@
                             <br><span class="text-xs text-go-red font-medium">PT: ${s.nama_PT || '-'}</span>
                         </td>
                         <td class="px-4 py-3 text-gray-600">${s.asal_sekolah || '-'}</td>
-                        <td class="px-4 py-3"><span class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-semibold">${statusBayar}</span></td>
                         <td class="px-4 py-3">
                             <input type="text" id="action_plan_${regNo}" value="${actionPlan}" placeholder="Tulis action plan..." class="border rounded px-2 py-1 text-xs w-full focus:ring-go-red focus:border-go-red">
                         </td>
@@ -879,7 +881,10 @@
             const search = document.getElementById('search-nilai').value.toLowerCase();
 
             const nilaiMap = {};
-            nilaiList.forEach(n => { nilaiMap[String(n.no_reg).trim()] = n; });
+            nilaiList.forEach(n => { 
+                const nReg = String(n.no_reg || n.No_Reg || '').trim();
+                nilaiMap[nReg] = n; 
+            });
 
             const filtered = siswaList.filter(s => 
                 (s.nama_siswa || '').toLowerCase().includes(search) || 
@@ -888,14 +893,13 @@
             );
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-500 italic">Tidak ada data siswa ditemukan.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-500 italic">Tidak ada data siswa ditemukan.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = filtered.map((s, idx) => {
                 const n = nilaiMap[String(s.no_reg).trim()] || {};
-                const statusBayar = n.status_pembayaran || n.Status_Pembayaran || '-';
-                const akum = n.akumulasi_nilai_100 || n.Akumulasi_Nilai_100 || 0;
+                const akum = n.akumulasi_nilai_100 ?? n.Akumulasi_Nilai_100 ?? n['Akumulasi Nilai 100'] ?? 0;
                 const kuis = n.kuis_tugas_pr_proyek || n['Kuis/Tugas/PR/Proyek'] || '-';
                 const uh = n.uh_pts_pas_pat || n['UH/PTS/PAS/PAT'] || '-';
 
@@ -911,7 +915,6 @@
                             <span class="font-semibold">${s.kelas_go || '-'}</span>
                             <br><span class="text-xs text-gray-400">PT: ${s.nama_PT || '-'}</span>
                         </td>
-                        <td class="px-3 py-3 text-center"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-semibold">${statusBayar}</span></td>
                         <td class="px-3 py-3 text-center font-bold text-go-red text-base">${akum}</td>
                         <td class="px-3 py-3 text-xs text-gray-600">${kuis}</td>
                         <td class="px-3 py-3 text-xs text-gray-600">${uh}</td>
