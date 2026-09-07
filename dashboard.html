@@ -18,7 +18,6 @@
         .border-go-red { border-color: #e21c2b; }
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
         .nav-active { background-color: #fef2f2; color: #e21c2b; border-right: 4px solid #e21c2b; }
-        /* Animasi loading */
         .loader { border-top-color: #e21c2b; -webkit-animation: spinner 1.5s linear infinite; animation: spinner 1.5s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -68,7 +67,6 @@
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
-        <!-- Header Mobile & Global -->
         <header class="h-20 bg-white shadow-sm flex items-center justify-between px-6 z-10 flex-shrink-0">
             <div class="flex items-center">
                 <button onclick="toggleSidebar()" class="md:hidden text-gray-500 hover:text-gray-700 mr-4">
@@ -94,14 +92,11 @@
             <p class="text-center text-gray-500 text-sm">Menghubungkan ke Database Google Sheets</p>
         </div>
 
-        <!-- Scrollable Content Area -->
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-6">
             
             <!-- TAB: DASHBOARD -->
             <div id="tab-dashboard" class="space-y-6 block">
-                <!-- Top Stats Row -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Pencapaian TA 26/27 -->
                     <div class="glass-card rounded-xl p-6 border-l-4 border-go-red relative overflow-hidden">
                         <i class="fas fa-user-graduate absolute -bottom-4 -right-4 text-8xl text-red-50 opacity-50"></i>
                         <h3 class="text-gray-500 text-sm font-medium uppercase tracking-wider mb-2">Pendaftar TA 26/27</h3>
@@ -111,7 +106,6 @@
                         </div>
                     </div>
 
-                    <!-- Target Progress -->
                     <div class="glass-card rounded-xl p-6">
                         <div class="flex justify-between items-center mb-2">
                             <h3 class="text-gray-500 text-sm font-medium uppercase tracking-wider">Capaian Target (650)</h3>
@@ -123,7 +117,6 @@
                         <p class="text-xs text-gray-400 mt-3 text-right">Dibutuhkan <span id="stat-kurang">0</span> siswa lagi</p>
                     </div>
 
-                    <!-- Ulang Tahun Hari Ini -->
                     <div class="glass-card rounded-xl p-6 bg-gradient-to-br from-white to-red-50">
                         <h3 class="text-gray-800 text-sm font-bold uppercase tracking-wider mb-4 flex items-center">
                             <i class="fas fa-birthday-cake text-go-red mr-2"></i> Ulang Tahun Hari Ini
@@ -138,16 +131,15 @@
                 <div class="glass-card rounded-xl p-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                         <div>
-                            <h2 class="text-lg font-bold text-gray-800">Grafik Pendaftar Bulanan Berdasarkan Tingkat</h2>
-                            <p class="text-xs text-gray-500 mt-1">Menampilkan breakdown jenjang SD, SMP, dan SMA</p>
+                            <h2 class="text-lg font-bold text-gray-800">Grafik Pendaftar Bulanan Per Tingkat Kelas</h2>
+                            <p class="text-xs text-gray-500 mt-1">Breakdown SD (4,5,6), SMP (7,8,9), & SMA (10,11,12 UMUM, 12 SNBT)</p>
                         </div>
                         <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 mt-3 md:mt-0 w-full md:w-auto">
-                            <!-- Filter Tingkat yang memicu update dropdown sekolah -->
                             <select id="filter-tingkat" onchange="onFilterTingkatChange()" class="border-gray-300 rounded-lg text-sm p-2 focus:ring-go-red focus:border-go-red w-full sm:w-auto">
                                 <option value="ALL">Semua Tingkat</option>
-                                <option value="SD">SD</option>
-                                <option value="SMP">SMP</option>
-                                <option value="SMA">SMA</option>
+                                <option value="SD">SD (4, 5, 6)</option>
+                                <option value="SMP">SMP (7, 8, 9)</option>
+                                <option value="SMA">SMA (10, 11, 12, SNBT)</option>
                             </select>
                             <select id="filter-sekolah" onchange="updateChart()" class="border-gray-300 rounded-lg text-sm p-2 focus:ring-go-red focus:border-go-red w-full sm:w-auto">
                                 <option value="ALL">Semua Sekolah</option>
@@ -159,17 +151,9 @@
                     </div>
                 </div>
 
-                <!-- Kapasitas Kelas -->
                 <div class="glass-card rounded-xl p-6">
                     <h2 class="text-lg font-bold text-gray-800 mb-6">Kapasitas per Kelas (Kelas GO)</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" id="class-capacity-grid">
-                    </div>
-                    <div class="mt-4 flex space-x-4 text-xs text-gray-500">
-                        <span class="flex items-center"><span class="w-3 h-3 bg-green-100 border border-green-400 rounded-full mr-1"></span> Tersedia</span>
-                        <span class="flex items-center"><span class="w-3 h-3 bg-yellow-100 border border-yellow-400 rounded-full mr-1"></span> Hampir Penuh</span>
-                        <span class="flex items-center"><span class="w-3 h-3 bg-red-100 border border-red-400 rounded-full mr-1"></span> Penuh/Over</span>
-                        <span class="ml-auto italic">*Max: SD (20), SMP/SMA (25)</span>
-                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" id="class-capacity-grid"></div>
                 </div>
             </div>
 
@@ -192,8 +176,7 @@
                                     <th class="px-4 py-3 text-center font-medium text-gray-500 uppercase">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="table-body-siswa" class="bg-white divide-y divide-gray-200">
-                            </tbody>
+                            <tbody id="table-body-siswa" class="bg-white divide-y divide-gray-200"></tbody>
                         </table>
                     </div>
                 </div>
@@ -205,13 +188,21 @@
                 <div class="glass-card rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h2 class="text-xl font-bold text-gray-800">Manajemen Perolehan Nilai 100</h2>
-                        <p class="text-xs text-gray-500 mt-1" id="nilai-100-subtitle">Monitoring pencapaian akademik dan Management by Exception (MBE)</p>
+                        <p class="text-xs text-gray-500 mt-1" id="nilai-100-subtitle">Monitoring pencapaian akademik dan Action Plan PT</p>
                     </div>
-                    <div id="superuser-filter-container" class="hidden flex items-center space-x-2 w-full md:w-auto">
-                        <label class="text-sm font-medium text-gray-600 whitespace-nowrap">Filter PT:</label>
-                        <select id="filter-pt-nilai" onchange="renderNilai100Tab()" class="border-gray-300 rounded-lg text-sm p-2 focus:ring-go-red focus:border-go-red w-full md:w-48">
-                            <option value="ALL">Semua PT</option>
-                        </select>
+                    <div id="superuser-filter-container" class="hidden flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm font-medium text-gray-600 whitespace-nowrap">Filter PT:</label>
+                            <select id="filter-pt-nilai" onchange="renderNilai100Tab()" class="border-gray-300 rounded-lg text-sm p-2 focus:ring-go-red focus:border-go-red w-44">
+                                <option value="ALL">Semua PT</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm font-medium text-gray-600 whitespace-nowrap">Filter Kelas GO:</label>
+                            <select id="filter-kelas-nilai" onchange="renderNilai100Tab()" class="border-gray-300 rounded-lg text-sm p-2 focus:ring-go-red focus:border-go-red w-36">
+                                <option value="ALL">Semua Kelas</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -235,14 +226,14 @@
                     </div>
                 </div>
 
-                <!-- Bagian MBE (Management by Exception) Khusus PT / Overview Superuser -->
+                <!-- Bagian MBE (Management by Exception) / Action Plan PT -->
                 <div class="glass-card rounded-xl p-6 border-t-4 border-go-red">
                     <div class="flex justify-between items-center mb-4">
                         <div>
                             <h3 class="text-lg font-bold text-gray-800 flex items-center">
-                                <i class="fas fa-exclamation-triangle text-go-red mr-2"></i> Siswa Belum Mendapat Nilai 100 (MBE)
+                                <i class="fas fa-exclamation-triangle text-go-red mr-2"></i> Siswa Belum Mendapat Nilai 100 (Action Plan PT)
                             </h3>
-                            <p class="text-xs text-gray-500">Daftar siswa yang memerlukan perhatian khusus beserta action plan penuntasannya.</p>
+                            <p class="text-xs text-gray-500">Isi action plan dan deadline penuntasan untuk siswa yang belum memperoleh nilai 100.</p>
                         </div>
                     </div>
                     <div class="overflow-x-auto">
@@ -252,13 +243,14 @@
                                     <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">No Reg / Nama</th>
                                     <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Kelas GO & PT</th>
                                     <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Asal Sekolah</th>
-                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Status Pembayaran</th>
-                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Action Plan</th>
-                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Deadline</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Status Bayar</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Action Plan (Input PT)</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Deadline (Input PT)</th>
+                                    <th class="px-4 py-3 text-center font-medium text-gray-500 uppercase">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="table-mbe-body" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="6" class="text-center py-4 text-gray-500 italic">Memuat data MBE...</td></tr>
+                                <tr><td colspan="7" class="text-center py-4 text-gray-500 italic">Memuat data MBE...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -419,7 +411,7 @@
                     
                     processDashboard();
                     renderTable();
-                    populatePTFilter();
+                    populatePTAndClassFilters();
                     renderNilai100Tab();
                 } else {
                     showToast(response.message || 'Gagal memuat data.', 'error');
@@ -458,20 +450,23 @@
             updateChart();
         }
 
-        // Populate filter sekolah berdasarkan pilihan tingkat (SD / SMP / SMA)
         function populateSchoolFilter() {
             const tkFilter = document.getElementById('filter-tingkat').value;
             const filterSekolah = document.getElementById('filter-sekolah');
             
-            // Filter data siswa sesuai tingkat yang dipilih
             let relevantData = dataSiswa;
             if (tkFilter !== 'ALL') {
-                relevantData = dataSiswa.filter(s => (s.tingkat_kelas || '').toUpperCase().includes(tkFilter));
+                relevantData = dataSiswa.filter(s => {
+                    const tk = (s.tingkat_kelas || '').toUpperCase();
+                    const kg = (s.kelas_go || '').toUpperCase();
+                    if (tkFilter === 'SD') return tk.includes('SD') || kg.includes('4') || kg.includes('5') || kg.includes('6');
+                    if (tkFilter === 'SMP') return tk.includes('SMP') || kg.includes('7') || kg.includes('8') || kg.includes('9');
+                    if (tkFilter === 'SMA') return tk.includes('SMA') || kg.includes('10') || kg.includes('11') || kg.includes('12') || kg.includes('UMUM') || kg.includes('SNBT');
+                    return true;
+                });
             }
 
             const sekolahSet = new Set(relevantData.map(s => s.asal_sekolah).filter(Boolean));
-            
-            // Simpan pilihan sekolah sebelumnya jika masih valid
             const currentSelectedSchool = filterSekolah.value;
 
             filterSekolah.innerHTML = '<option value="ALL">Semua Sekolah</option>';
@@ -479,7 +474,6 @@
                 filterSekolah.innerHTML += `<option value="${sek}">${sek}</option>`;
             });
 
-            // Kembalikan pilihan sekolah jika masih ada dalam daftar
             if (Array.from(sekolahSet).includes(currentSelectedSchool)) {
                 filterSekolah.value = currentSelectedSchool;
             } else {
@@ -531,7 +525,7 @@
                 
                 if (!classLevels[kelas]) {
                     const tk = (s.tingkat_kelas || '').toUpperCase();
-                    classLevels[kelas] = tk.includes('SD') ? 'SD' : 'OTHER';
+                    classLevels[kelas] = (tk.includes('SD') || kelas.includes('4') || kelas.includes('5') || kelas.includes('6')) ? 'SD' : 'OTHER';
                 }
             });
 
@@ -568,10 +562,9 @@
                 let tingkatStr = (s.tingkat_kelas || '').toUpperCase().trim();
                 let kelasGoStr = (s.kelas_go || '').toUpperCase().trim();
                 
-                // Klasifikasi ketat berdasarkan kolom tingkat_kelas sesuai permintaan
-                let isSD = tingkatStr.includes('4 SD') || tingkatStr.includes('5 SD') || tingkatStr.includes('6 SD') || tingkatStr.includes('SD');
-                let isSMP = tingkatStr.includes('7 SMP') || tingkatStr.includes('8 SMP') || tingkatStr.includes('9 SMP') || tingkatStr.includes('SMP');
-                let isSMA = tingkatStr.includes('10 UMUM') || tingkatStr.includes('11 UMUM') || tingkatStr.includes('12 UMUM') || tingkatStr.includes('12 SNBT') || tingkatStr.includes('SMA');
+                let isSD = tingkatStr.includes('4 SD') || tingkatStr.includes('5 SD') || tingkatStr.includes('6 SD') || tingkatStr.includes('SD') || kelasGoStr.includes('4') || kelasGoStr.includes('5') || kelasGoStr.includes('6');
+                let isSMP = tingkatStr.includes('7 SMP') || tingkatStr.includes('8 SMP') || tingkatStr.includes('9 SMP') || tingkatStr.includes('SMP') || kelasGoStr.includes('7') || kelasGoStr.includes('8') || kelasGoStr.includes('9');
+                let isSMA = tingkatStr.includes('10 UMUM') || tingkatStr.includes('11 UMUM') || tingkatStr.includes('12 UMUM') || tingkatStr.includes('12 SNBT') || tingkatStr.includes('SMA') || kelasGoStr.includes('UMUM') || kelasGoStr.includes('SNBT') || kelasGoStr.includes('10') || kelasGoStr.includes('11') || kelasGoStr.includes('12');
 
                 let matchTk = true;
                 if (tkFilter === 'SD') matchTk = isSD;
@@ -594,7 +587,6 @@
                     const tk = (s.tingkat_kelas || '').toUpperCase().trim();
                     const kg = (s.kelas_go || '').toUpperCase().trim();
                     
-                    // Rincian kategori berdasarkan tingkat_kelas persis
                     if (tk.includes('4 SD') || tk.includes('5 SD') || tk.includes('6 SD') || tk.includes('SD') || kg.includes('4') || kg.includes('5') || kg.includes('6')) {
                         monthMap[monthKey].SD++;
                     } else if (tk.includes('7 SMP') || tk.includes('8 SMP') || tk.includes('9 SMP') || tk.includes('SMP') || kg.includes('7') || kg.includes('8') || kg.includes('9')) {
@@ -663,12 +655,8 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: true, position: 'bottom' } 
-                    },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { precision: 0 } }
-                    }
+                    plugins: { legend: { display: true, position: 'bottom' } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
                 }
             });
         }
@@ -722,7 +710,7 @@
             const titles = {
                 'dashboard': 'Dashboard Overview',
                 'data-siswa': 'Database Siswa',
-                'nilai-100': 'Perolehan Nilai 100 & MBE',
+                'nilai-100': 'Perolehan Nilai 100 & Action Plan PT',
                 'input-siswa': 'Input / Edit Data Siswa'
             };
             document.getElementById('page-title').textContent = titles[tabId];
@@ -732,15 +720,22 @@
             }
         }
 
-        // === FUNGSI TAB NILAI 100 & MBE ===
-        function populatePTFilter() {
+        // === FUNGSI TAB NILAI 100 & ACTION PLAN ===
+        function populatePTAndClassFilters() {
             if (!isSuperUser) return;
+            
             const filterPtSelect = document.getElementById('filter-pt-nilai');
             const ptSet = new Set(dataSiswa.map(s => s.nama_PT).filter(Boolean));
-            
             filterPtSelect.innerHTML = '<option value="ALL">Semua PT</option>';
             Array.from(ptSet).sort().forEach(pt => {
                 filterPtSelect.innerHTML += `<option value="${pt}">${pt}</option>`;
+            });
+
+            const filterKelasSelect = document.getElementById('filter-kelas-nilai');
+            const kelasSet = new Set(dataSiswa.map(s => s.kelas_go).filter(Boolean));
+            filterKelasSelect.innerHTML = '<option value="ALL">Semua Kelas</option>';
+            Array.from(kelasSet).sort().forEach(kls => {
+                filterKelasSelect.innerHTML += `<option value="${kls}">${kls}</option>`;
             });
         }
 
@@ -749,20 +744,23 @@
             let activeNilai = dataNilai100;
 
             if (!isSuperUser) {
-                // Filter ketat sesuai PT (nama_PT di sheet siswa sama dengan currentUser)
                 activeSiswa = dataSiswa.filter(s => String(s.nama_PT || '').trim().toLowerCase() === String(currentUser).trim().toLowerCase());
                 const regSet = new Set(activeSiswa.map(s => String(s.no_reg).trim()));
                 activeNilai = dataNilai100.filter(n => regSet.has(String(n.no_reg).trim()));
             } else {
                 const selectedPT = document.getElementById('filter-pt-nilai').value;
+                const selectedKelas = document.getElementById('filter-kelas-nilai').value;
+
                 if (selectedPT !== 'ALL') {
-                    activeSiswa = dataSiswa.filter(s => String(s.nama_PT || '').trim() === selectedPT);
-                    const regSet = new Set(activeSiswa.map(s => String(s.no_reg).trim()));
-                    activeNilai = dataNilai100.filter(n => regSet.has(String(n.no_reg).trim()));
+                    activeSiswa = activeSiswa.filter(s => String(s.nama_PT || '').trim() === selectedPT);
                 }
+                if (selectedKelas !== 'ALL') {
+                    activeSiswa = activeSiswa.filter(s => String(s.kelas_go || '').trim() === selectedKelas);
+                }
+                const regSet = new Set(activeSiswa.map(s => String(s.no_reg).trim()));
+                activeNilai = dataNilai100.filter(n => regSet.has(String(n.no_reg).trim()));
             }
 
-            // Hitung Statistik
             const totalSiswa = activeSiswa.length;
             let totalAkumulasi = 0;
             let sudahDapat = 0;
@@ -788,7 +786,6 @@
 
         function renderMBETable(siswaList, nilaiMap) {
             const tbody = document.getElementById('table-mbe-body');
-            // Siswa yang belum dapat nilai 100 atau akumulasi 0
             const mbeList = siswaList.filter(s => {
                 const n = nilaiMap[String(s.no_reg).trim()];
                 const akum = n ? (parseInt(n.akumulasi_nilai_100 || n.Akumulasi_Nilai_100 || 0) || 0) : 0;
@@ -796,16 +793,16 @@
             });
 
             if (mbeList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-green-600 font-medium">Luar biasa! Semua siswa sudah memiliki perolehan nilai 100.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-green-600 font-medium">Luar biasa! Semua siswa pada filter ini sudah memiliki perolehan nilai 100.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = mbeList.map(s => {
                 const n = nilaiMap[String(s.no_reg).trim()] || {};
                 const statusBayar = n.status_pembayaran || n.Status_Pembayaran || 'Lunas';
-                // Action plan default jika kosong
-                const actionPlan = n.action_plan || 'Pemberian tugas remidi target 100 dan bimbingan intensif kuis';
-                const deadline = n.tanggal_penuntasan || n.Tanggal_Penuntasan || '2026-06-30';
+                const actionPlan = n.action_plan || n.Action_Plan || '';
+                const deadline = n.tanggal_penuntasan || n.Tanggal_Penuntasan || n.deadline || '';
+                const regNo = s.no_reg;
 
                 return `
                     <tr class="hover:bg-gray-50">
@@ -819,11 +816,54 @@
                         </td>
                         <td class="px-4 py-3 text-gray-600">${s.asal_sekolah || '-'}</td>
                         <td class="px-4 py-3"><span class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-semibold">${statusBayar}</span></td>
-                        <td class="px-4 py-3 text-gray-800 text-xs font-medium">${actionPlan}</td>
-                        <td class="px-4 py-3 text-red-600 font-bold text-xs whitespace-nowrap">${deadline}</td>
+                        <td class="px-4 py-3">
+                            <input type="text" id="action_plan_${regNo}" value="${actionPlan}" placeholder="Tulis action plan..." class="border rounded px-2 py-1 text-xs w-full focus:ring-go-red focus:border-go-red">
+                        </td>
+                        <td class="px-4 py-3">
+                            <input type="date" id="deadline_${regNo}" value="${deadline ? deadline.split('T')[0] : ''}" class="border rounded px-2 py-1 text-xs w-full focus:ring-go-red focus:border-go-red">
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <button onclick="saveActionPlan('${regNo}')" class="bg-go-red text-white px-3 py-1 rounded text-xs font-medium hover:bg-red-700 shadow-sm">
+                                <i class="fas fa-save mr-1"></i> Simpan
+                            </button>
+                        </td>
                     </tr>
                 `;
             }).join('');
+        }
+
+        function saveActionPlan(noReg) {
+            const actionPlanVal = document.getElementById(`action_plan_${noReg}`).value;
+            const deadlineVal = document.getElementById(`deadline_${noReg}`).value;
+
+            showToast('Menyimpan action plan...', 'success');
+
+            const payload = {
+                action: 'saveNilai100ActionPlan',
+                no_reg: noReg,
+                action_plan: actionPlanVal,
+                deadline: deadlineVal
+            };
+
+            const formBody = Object.keys(payload).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(payload[key])).join('&');
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formBody
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    showToast('Action plan berhasil disimpan!', 'success');
+                    fetchAllData();
+                } else {
+                    showToast('Gagal: ' + res.message, 'error');
+                }
+            })
+            .catch(err => {
+                showToast('Kesalahan jaringan.', 'error');
+            });
         }
 
         function renderNilai100Table(siswaList, nilaiList) {
@@ -955,9 +995,7 @@
 
             fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
-    headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formBody
             })
             .then(response => response.json())
@@ -965,7 +1003,7 @@
                 if(data.success) {
                     showToast('Data berhasil disimpan!', 'success');
                     resetForm();
-                    fetchData();
+                    fetchAllData();
                 } else {
                     showToast('Gagal menyimpan: ' + data.message, 'error');
                 }
