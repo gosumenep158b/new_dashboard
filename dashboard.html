@@ -131,7 +131,10 @@
                 <!-- Chart & Filters Row -->
                 <div class="glass-card rounded-xl p-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                        <h2 class="text-lg font-bold text-gray-800">Grafik Pendaftar Bulanan</h2>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800">Grafik Pendaftar Bulanan Berdasarkan Tingkat</h2>
+                            <p class="text-xs text-gray-500 mt-1">Menampilkan breakdown jenjang SD, SMP, dan SMA</p>
+                        </div>
                         <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 mt-3 md:mt-0 w-full md:w-auto">
                             <!-- Filter Tingkat yang memicu update dropdown sekolah -->
                             <select id="filter-tingkat" onchange="onFilterTingkatChange()" class="border-gray-300 rounded-lg text-sm p-2 focus:ring-go-red focus:border-go-red w-full sm:w-auto">
@@ -145,7 +148,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="w-full h-72">
+                    <div class="w-full h-80">
                         <canvas id="registrationChart"></canvas>
                     </div>
                 </div>
@@ -450,27 +453,73 @@
             const sekFilter = document.getElementById('filter-sekolah').value;
 
             let filtered = dataSiswa.filter(s => {
-                let matchTk = tkFilter === 'ALL' || (s.tingkat_kelas || '').toUpperCase().includes(tkFilter);
+                let tingkatStr = (s.tingkat_kelas || '').toUpperCase();
+                let matchTk = tkFilter === 'ALL' || tingkatStr.includes(tkFilter);
                 let matchSek = sekFilter === 'ALL' || s.asal_sekolah === sekFilter;
                 return matchTk && matchSek && s.tgl_daftar;
             });
 
-            const monthCounts = {};
+            const monthMap = {};
             filtered.forEach(s => {
                 const d = new Date(s.tgl_daftar);
                 if (!isNaN(d.getTime())) {
                     const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
-                    monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1;
+                    if (!monthMap[monthKey]) {
+                        monthMap[monthKey] = { SD: 0, SMP: 0, SMA: 0, Lainnya: 0 };
+                    }
+                    const tk = (s.tingkat_kelas || '').toUpperCase();
+                    if (tk.includes('SD')) monthMap[monthKey].SD++;
+                    else if (tk.includes('SMP')) monthMap[monthKey].SMP++;
+                    else if (tk.includes('SMA')) monthMap[monthKey].SMA++;
+                    else monthMap[monthKey].Lainnya++;
                 }
             });
 
-            const sortedMonths = Object.keys(monthCounts).sort();
+            const sortedMonths = Object.keys(monthMap).sort();
             const labels = sortedMonths.map(m => {
                 const [y, mm] = m.split('-');
                 const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
                 return `${monthNames[parseInt(mm)-1]} ${y.slice(2)}`;
             });
-            const data = sortedMonths.map(m => monthCounts[m]);
+
+            const dataSD = sortedMonths.map(m => monthMap[m].SD);
+            const dataSMP = sortedMonths.map(m => monthMap[m].SMP);
+            const dataSMA = sortedMonths.map(m => monthMap[m].SMA);
+
+            const datasets = [];
+            if (tkFilter === 'ALL' || tkFilter === 'SD') {
+                datasets.push({
+                    label: 'Tingkat SD',
+                    data: dataSD,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                });
+            }
+            if (tkFilter === 'ALL' || tkFilter === 'SMP') {
+                datasets.push({
+                    label: 'Tingkat SMP',
+                    data: dataSMP,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                });
+            }
+            if (tkFilter === 'ALL' || tkFilter === 'SMA') {
+                datasets.push({
+                    label: 'Tingkat SMA',
+                    data: dataSMA,
+                    borderColor: '#e21c2b',
+                    backgroundColor: 'rgba(226, 28, 43, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                });
+            }
 
             const ctx = document.getElementById('registrationChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -479,21 +528,14 @@
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Jumlah Pendaftar Baru',
-                        data: data,
-                        borderColor: '#e21c2b',
-                        backgroundColor: 'rgba(226, 28, 43, 0.1)',
-                        borderWidth: 2,
-                        pointBackgroundColor: '#e21c2b',
-                        fill: true,
-                        tension: 0.3
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: true, position: 'bottom' } 
+                    },
                     scales: {
                         y: { beginAtZero: true, ticks: { precision: 0 } }
                     }
