@@ -454,7 +454,18 @@
 
             let filtered = dataSiswa.filter(s => {
                 let tingkatStr = (s.tingkat_kelas || '').toUpperCase();
-                let matchTk = tkFilter === 'ALL' || tingkatStr.includes(tkFilter);
+                let kelasGoStr = (s.kelas_go || '').toUpperCase();
+                
+                // Cek kategori tingkat berdasarkan aturan spesifik
+                let isSD = tingkatStr.includes('SD') || kelasGoStr.includes(' SD') || kelasGoStr.includes('4') || kelasGoStr.includes('5') || kelasGoStr.includes('6');
+                let isSMP = tingkatStr.includes('SMP') || kelasGoStr.includes('SMP') || kelasGoStr.includes('7') || kelasGoStr.includes('8') || kelasGoStr.includes('9');
+                let isSMA = tingkatStr.includes('SMA') || kelasGoStr.includes('SMA') || kelasGoStr.includes('UMUM') || kelasGoStr.includes('SNBT') || kelasGoStr.includes('10') || kelasGoStr.includes('11') || kelasGoStr.includes('12');
+
+                let matchTk = true;
+                if (tkFilter === 'SD') matchTk = isSD;
+                else if (tkFilter === 'SMP') matchTk = isSMP;
+                else if (tkFilter === 'SMA') matchTk = isSMA;
+
                 let matchSek = sekFilter === 'ALL' || s.asal_sekolah === sekFilter;
                 return matchTk && matchSek && s.tgl_daftar;
             });
@@ -465,13 +476,20 @@
                 if (!isNaN(d.getTime())) {
                     const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
                     if (!monthMap[monthKey]) {
-                        monthMap[monthKey] = { SD: 0, SMP: 0, SMA: 0, Lainnya: 0 };
+                        monthMap[monthKey] = { SD: 0, SMP: 0, SMA: 0 };
                     }
+                    
                     const tk = (s.tingkat_kelas || '').toUpperCase();
-                    if (tk.includes('SD')) monthMap[monthKey].SD++;
-                    else if (tk.includes('SMP')) monthMap[monthKey].SMP++;
-                    else if (tk.includes('SMA')) monthMap[monthKey].SMA++;
-                    else monthMap[monthKey].Lainnya++;
+                    const kg = (s.kelas_go || '').toUpperCase();
+                    
+                    // Deteksi kategori spesifik
+                    if (tk.includes('SD') || kg.includes('4') || kg.includes('5') || kg.includes('6')) {
+                        monthMap[monthKey].SD++;
+                    } else if (tk.includes('SMP') || kg.includes('7') || kg.includes('8') || kg.includes('9')) {
+                        monthMap[monthKey].SMP++;
+                    } else if (tk.includes('SMA') || kg.includes('10') || kg.includes('11') || kg.includes('12') || kg.includes('UMUM') || kg.includes('SNBT')) {
+                        monthMap[monthKey].SMA++;
+                    }
                 }
             });
 
@@ -489,7 +507,7 @@
             const datasets = [];
             if (tkFilter === 'ALL' || tkFilter === 'SD') {
                 datasets.push({
-                    label: 'Tingkat SD',
+                    label: 'Tingkat SD (4, 5, 6 SD)',
                     data: dataSD,
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -500,7 +518,7 @@
             }
             if (tkFilter === 'ALL' || tkFilter === 'SMP') {
                 datasets.push({
-                    label: 'Tingkat SMP',
+                    label: 'Tingkat SMP (7, 8, 9 SMP)',
                     data: dataSMP,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -511,7 +529,7 @@
             }
             if (tkFilter === 'ALL' || tkFilter === 'SMA') {
                 datasets.push({
-                    label: 'Tingkat SMA',
+                    label: 'Tingkat SMA (10, 11, 12 UMUM & SNBT)',
                     data: dataSMA,
                     borderColor: '#e21c2b',
                     backgroundColor: 'rgba(226, 28, 43, 0.1)',
