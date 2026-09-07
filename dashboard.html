@@ -228,12 +228,18 @@
 
                 <!-- Bagian MBE (Management by Exception) / Action Plan PT -->
                 <div class="glass-card rounded-xl p-6 border-t-4 border-go-red">
-                    <div class="flex justify-between items-center mb-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                         <div>
                             <h3 class="text-lg font-bold text-gray-800 flex items-center">
                                 <i class="fas fa-exclamation-triangle text-go-red mr-2"></i> Siswa Belum Mendapat Nilai 100 (Action Plan PT)
                             </h3>
                             <p class="text-xs text-gray-500">Isi action plan dan deadline penuntasan untuk siswa yang belum memperoleh nilai 100.</p>
+                        </div>
+                        <div class="flex items-center space-x-2 w-full sm:w-auto">
+                            <label class="text-xs font-medium text-gray-600 whitespace-nowrap">Filter Kelas:</label>
+                            <select id="filter-mbe-kelas" onchange="renderNilai100Tab()" class="border-gray-300 rounded-lg text-xs p-2 focus:ring-go-red focus:border-go-red w-full sm:w-36">
+                                <option value="ALL">Semua Kelas GO</option>
+                            </select>
                         </div>
                     </div>
                     <div class="overflow-x-auto">
@@ -376,7 +382,8 @@
         let dataNilai100 = [];
         let chartInstance = null;
         let currentUser = localStorage.getItem('go_username') || 'Admin';
-        let isSuperUser = currentUser.toLowerCase() === 'superuser' || currentUser.toLowerCase() === 'admin pusat' || currentUser.toLowerCase() === 'super admin';
+        let currentKategori = localStorage.getItem('go_kategori') || 'admin';
+        let isSuperUser = currentKategori.toLowerCase() === 'superadmin' || currentKategori.toLowerCase() === 'superuser' || currentUser.toLowerCase() === 'superuser' || currentUser.toLowerCase() === 'admin pusat';
 
         const loadingOverlay = document.getElementById('loading-overlay');
         const tabDashboard = document.getElementById('tab-dashboard');
@@ -386,7 +393,7 @@
         
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('user-display').textContent = `Halo, ${currentUser}`;
-            document.getElementById('user-role-badge').textContent = isSuperUser ? 'Superuser / Pusat' : 'Pengajar / PT';
+            document.getElementById('user-role-badge').textContent = isSuperUser ? 'Superadmin / Pusat' : `PT: ${currentUser}`;
             document.getElementById('inp_nama_PT').value = currentUser;
             
             if (isSuperUser) {
@@ -720,21 +727,25 @@
 
         // === FUNGSI TAB NILAI 100 & ACTION PLAN ===
         function populatePTAndClassFilters() {
+            const filterPtSelect = document.getElementById('filter-pt-nilai');
+            const filterKelasSelect = document.getElementById('filter-kelas-nilai');
+            const filterMbeKelas = document.getElementById('filter-mbe-kelas');
+
+            const kelasSet = new Set(dataSiswa.map(s => s.kelas_go).filter(Boolean));
+            const kelasOptionsHtml = '<option value="ALL">Semua Kelas</option>' + Array.from(kelasSet).sort().map(kls => `<option value="${kls}">${kls}</option>`).join('');
+            
+            if (filterKelasSelect) filterKelasSelect.innerHTML = kelasOptionsHtml;
+            if (filterMbeKelas) filterMbeKelas.innerHTML = '<option value="ALL">Semua Kelas GO</option>' + Array.from(kelasSet).sort().map(kls => `<option value="${kls}">${kls}</option>`).join('');
+
             if (!isSuperUser) return;
             
-            const filterPtSelect = document.getElementById('filter-pt-nilai');
             const ptSet = new Set(dataSiswa.map(s => s.nama_PT).filter(Boolean));
-            filterPtSelect.innerHTML = '<option value="ALL">Semua PT</option>';
-            Array.from(ptSet).sort().forEach(pt => {
-                filterPtSelect.innerHTML += `<option value="${pt}">${pt}</option>`;
-            });
-
-            const filterKelasSelect = document.getElementById('filter-kelas-nilai');
-            const kelasSet = new Set(dataSiswa.map(s => s.kelas_go).filter(Boolean));
-            filterKelasSelect.innerHTML = '<option value="ALL">Semua Kelas</option>';
-            Array.from(kelasSet).sort().forEach(kls => {
-                filterKelasSelect.innerHTML += `<option value="${kls}">${kls}</option>`;
-            });
+            if (filterPtSelect) {
+                filterPtSelect.innerHTML = '<option value="ALL">Semua PT</option>';
+                Array.from(ptSet).sort().forEach(pt => {
+                    filterPtSelect.innerHTML += `<option value="${pt}">${pt}</option>`;
+                });
+            }
         }
 
         function renderNilai100Tab() {
@@ -746,8 +757,8 @@
                 const regSet = new Set(activeSiswa.map(s => String(s.no_reg).trim()));
                 activeNilai = dataNilai100.filter(n => regSet.has(String(n.no_reg).trim()));
             } else {
-                const selectedPT = document.getElementById('filter-pt-nilai').value;
-                const selectedKelas = document.getElementById('filter-kelas-nilai').value;
+                const selectedPT = document.getElementById('filter-pt-nilai')?.value || 'ALL';
+                const selectedKelas = document.getElementById('filter-kelas-nilai')?.value || 'ALL';
 
                 if (selectedPT !== 'ALL') {
                     activeSiswa = activeSiswa.filter(s => String(s.nama_PT || '').trim() === selectedPT);
@@ -768,7 +779,6 @@
                 const nReg = String(n.no_reg || n.No_Reg || '').trim();
                 nilaiMap[nReg] = n;
                 
-                // Cek berbagai kemungkinan variasi nama kolom Akumulasi
                 const rawAkum = n.akumulasi_nilai_100 ?? n.Akumulasi_Nilai_100 ?? n['Akumulasi Nilai 100'] ?? 0;
                 const akum = parseInt(rawAkum) || 0;
                 
@@ -789,15 +799,20 @@
 
         function renderMBETable(siswaList, nilaiMap) {
             const tbody = document.getElementById('table-mbe-body');
+            const selectedMbeKelas = document.getElementById('filter-mbe-kelas')?.value || 'ALL';
+
             const mbeList = siswaList.filter(s => {
                 const n = nilaiMap[String(s.no_reg).trim()] || {};
                 const rawAkum = n.akumulasi_nilai_100 ?? n.Akumulasi_Nilai_100 ?? n['Akumulasi Nilai 100'] ?? 0;
                 const akum = parseInt(rawAkum) || 0;
-                return akum === 0;
+                
+                const matchAkum = akum === 0;
+                const matchKelas = selectedMbeKelas === 'ALL' || String(s.kelas_go || '').trim() === selectedMbeKelas;
+                return matchAkum && matchKelas;
             });
 
             if (mbeList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-green-600 font-medium">Luar biasa! Semua siswa pada filter ini sudah memiliki perolehan nilai 100.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-green-600 font-medium">Luar biasa! Semua siswa pada filter kelas ini sudah memiliki perolehan nilai 100.</td></tr>`;
                 return;
             }
 
