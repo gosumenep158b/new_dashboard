@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - GO Sumenep</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js untuk Grafik -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .bg-go-red { background-color: #e21c2b; }
+        .text-go-red { color: #e21c2b; }
+        .border-go-red { border-color: #e21c2b; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        .nav-active { background-color: #fef2f2; color: #e21c2b; border-right: 4px solid #e21c2b; }
+        /* Animasi loading */
+        .loader { border-top-color: #e21c2b; -webkit-animation: spinner 1.5s linear infinite; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-lg flex-shrink-0 flex flex-col transition-all duration-300 hidden md:flex z-20 absolute md:relative h-full" id="sidebar">
+        <div class="h-20 flex items-center justify-center border-b border-gray-100 px-4">
+            <img src="logo GO Standar.png" alt="Logo GO" class="h-12 object-contain" onerror="this.src='https://placehold.co/200x60/ffffff/e21c2b?text=Ganesha+Operation'">
+        </div>
+        <div class="p-4 flex-1 overflow-y-auto">
+            <ul class="space-y-2">
+                <li>
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center p-3 rounded-lg nav-active hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-chart-line w-6 text-center"></i>
+                        <span class="ml-3 font-medium">Dashboard Overview</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('data-siswa')" id="nav-data-siswa" class="w-full flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-users w-6 text-center"></i>
+                        <span class="ml-3 font-medium">Data Siswa</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('input-siswa')" id="nav-input-siswa" class="w-full flex items-center p-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-user-plus w-6 text-center"></i>
+                        <span class="ml-3 font-medium">Input/Edit Siswa</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="p-4 border-t border-gray-100">
+            <button onclick="logout()" class="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+                <i class="fas fa-sign-out-alt w-6 text-center"></i>
+                <span class="ml-3 font-medium">Keluar</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
+        <!-- Header Mobile & Global -->
+        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-6 z-10 flex-shrink-0">
+            <div class="flex items-center">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-500 hover:text-gray-700 mr-4">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h1 class="text-xl font-bold text-gray-800" id="page-title">Dashboard Overview</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-right hidden sm:block">
+                    <p class="font-medium text-gray-800" id="user-display">Selamat datang,</p>
+                    <p class="text-gray-500 text-xs">GO Sumenep</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-go-red text-white flex items-center justify-center font-bold">
+                    GO
+                </div>
+            </div>
+        </header>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="absolute inset-0 bg-gray-100 bg-opacity-75 z-50 flex flex-col items-center justify-center">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+            <h2 class="text-center text-gray-700 text-xl font-semibold">Memuat Data...</h2>
+            <p class="text-center text-gray-500 text-sm">Menghubungkan ke Database Google Sheets</p>
+        </div>
+
+        <!-- Scrollable Content Area -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-6">
+            
+            <!-- TAB: DASHBOARD -->
+            <div id="tab-dashboard" class="space-y-6 block">
+                <!-- Top Stats Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Pencapaian TA 26/27 -->
+                    <div class="glass-card rounded-xl p-6 border-l-4 border-go-red relative overflow-hidden">
+                        <i class="fas fa-user-graduate absolute -bottom-4 -right-4 text-8xl text-red-50 opacity-50"></i>
+                        <h3 class="text-gray-500 text-sm font-medium uppercase tracking-wider mb-2">Pendaftar TA 26/27</h3>
+                        <div class="flex items-baseline">
+                            <span class="text-4xl font-bold text-gray-800" id="stat-total">0</span>
+                            <span class="ml-2 text-sm text-gray-500">Siswa</span>
+                        </div>
+                    </div>
+
+                    <!-- Target Progress -->
+                    <div class="glass-card rounded-xl p-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-gray-500 text-sm font-medium uppercase tracking-wider">Capaian Target (650)</h3>
+                            <span class="font-bold text-go-red" id="stat-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3 mt-4">
+                            <div id="progress-bar" class="bg-go-red h-3 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-3 text-right">Dibutuhkan <span id="stat-kurang">0</span> siswa lagi</p>
+                    </div>
+
+                    <!-- Ulang Tahun Hari Ini -->
+                    <div class="glass-card rounded-xl p-6 bg-gradient-to-br from-white to-red-50">
+                        <h3 class="text-gray-800 text-sm font-bold uppercase tracking-wider mb-4 flex items-center">
+                            <i class="fas fa-birthday-cake text-go-red mr-2"></i> Ulang Tahun Hari Ini
+                        </h3>
+                        <div id="birthday-list" class="space-y-3 max-h-24 overflow-y-auto pr-2 text-sm">
+                            <!-- List ultah akan di-render di sini -->
+                            <p class="text-gray-500 italic">Memeriksa data...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart & Filters Row -->
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <h2 class="text-lg font-bold text-gray-800">Grafik Pendaftar Bulanan</h2>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 mt-3 md:mt-0 w-full md:w-auto">
+                            <select id="filter-tingkat" onchange="updateChart()" class="border-gray-300 rounded-lg text-sm p-2 focus:ring-go-red focus:border-go-red w-full sm:w-auto">
+                                <option value="ALL">Semua Tingkat</option>
+                                <option value="SD">SD</option>
+                                <option value="SMP">SMP</option>
+                                <option value="SMA">SMA</option>
+                            </select>
+                            <select id="filter-sekolah" onchange="updateChart()" class="border-gray-300 rounded-lg text-sm p-2 focus:ring-go-red focus:border-go-red w-full sm:w-auto">
+                                <option value="ALL">Semua Sekolah</option>
+                                <!-- Akan diisi dinamis -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="w-full h-72">
+                        <canvas id="registrationChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Kapasitas Kelas -->
+                <div class="glass-card rounded-xl p-6">
+                    <h2 class="text-lg font-bold text-gray-800 mb-6">Kapasitas per Kelas (Kelas GO)</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" id="class-capacity-grid">
+                        <!-- Kartu kelas di-render di sini -->
+                    </div>
+                    <div class="mt-4 flex space-x-4 text-xs text-gray-500">
+                        <span class="flex items-center"><span class="w-3 h-3 bg-green-100 border border-green-400 rounded-full mr-1"></span> Tersedia</span>
+                        <span class="flex items-center"><span class="w-3 h-3 bg-yellow-100 border border-yellow-400 rounded-full mr-1"></span> Hampir Penuh</span>
+                        <span class="flex items-center"><span class="w-3 h-3 bg-red-100 border border-red-400 rounded-full mr-1"></span> Penuh/Over</span>
+                        <span class="ml-auto italic">*Max: SD (20), SMP/SMA (25)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: DATA SISWA -->
+            <div id="tab-data-siswa" class="hidden">
+                <div class="glass-card rounded-xl p-6 h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-gray-800">Database Siswa</h2>
+                        <input type="text" id="search-siswa" placeholder="Cari nama atau No. Reg..." class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-64 focus:ring-go-red focus:border-go-red outline-none" onkeyup="renderTable()">
+                    </div>
+                    <div class="overflow-x-auto flex-1">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">No. Reg</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Nama Siswa</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Tingkat & Kelas</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">Asal Sekolah</th>
+                                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase">No HP</th>
+                                    <th class="px-4 py-3 text-center font-medium text-gray-500 uppercase">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-siswa" class="bg-white divide-y divide-gray-200">
+                                <!-- Data diisi via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: INPUT/EDIT SISWA -->
+            <div id="tab-input-siswa" class="hidden">
+                <div class="glass-card rounded-xl p-6 max-w-4xl mx-auto">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2" id="form-title">Form Input Siswa Baru</h2>
+                    
+                    <form id="form-siswa" onsubmit="submitForm(event)" class="space-y-6">
+                        <!-- Hidden field penanda baris untuk Edit -->
+                        <input type="hidden" id="edit-row-id" value="">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Kolom Kiri -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">No. Registrasi *</label>
+                                    <input type="text" id="inp_no_reg" required class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Siswa *</label>
+                                    <input type="text" id="inp_nama_siswa" required class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir</label>
+                                    <input type="date" id="inp_tgl_lahir" class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">No. HP Siswa</label>
+                                    <input type="text" id="inp_no_hp" class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Orang Tua</label>
+                                    <input type="text" id="inp_nama_ortu" class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">No. HP Orang Tua</label>
+                                    <input type="text" id="inp_no_hp_ortu" class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                </div>
+                            </div>
+
+                            <!-- Kolom Kanan -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Kelas (SD/SMP/SMA) *</label>
+                                    <select id="inp_tingkat_kelas" required class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                        <option value="">Pilih Tingkat</option>
+                                        <option value="SD">SD</option>
+                                        <option value="SMP">SMP</option>
+                                        <option value="SMA">SMA</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kelas GO *</label>
+                                    <input type="text" id="inp_kelas_go" required placeholder="Contoh: 12 IPA 1" class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Asal Sekolah</label>
+                                    <input type="text" id="inp_asal_sekolah" class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Daftar</label>
+                                    <input type="date" id="inp_tgl_daftar" class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama PT (Penginput)</label>
+                                    <input type="text" id="inp_nama_PT" class="w-full px-4 py-2 border rounded-lg focus:ring-go-red bg-gray-50" readonly>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tahun Ajaran (TA) *</label>
+                                    <input type="text" id="inp_TA" required value="26/27" class="w-full px-4 py-2 border rounded-lg focus:ring-go-red focus:border-go-red">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t flex justify-end space-x-3">
+                            <button type="button" onclick="resetForm()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal/Reset</button>
+                            <button type="submit" id="btn-submit" class="px-6 py-2 bg-go-red text-white font-medium rounded-lg hover:bg-red-700 shadow-md flex items-center">
+                                <i class="fas fa-save mr-2"></i> Simpan Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Toast Notification -->
+            <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 translate-y-20 opacity-0 z-50">
+                <span id="toast-msg">Pesan...</span>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // GANTI DENGAN URL APPS SCRIPT ANDA
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHTEqSxYruOyjWips4dVembVzDP2G7rizAtYANYV2ET3yhFr6lYdFMyO2UuS5PYvXe/exec';
+        
+        // State Management
+        let dataSiswa = [];
+        let chartInstance = null;
+        let currentUser = localStorage.getItem('go_username') || 'Admin'; // Dummy dari login sebelumnya
+
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const tabDashboard = document.getElementById('tab-dashboard');
+        const tabDataSiswa = document.getElementById('tab-data-siswa');
+        const tabInputSiswa = document.getElementById('tab-input-siswa');
+        
+        // Inisialisasi
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('user-display').textContent = `Halo, ${currentUser}`;
+            document.getElementById('inp_nama_PT').value = currentUser;
+            fetchData();
+        });
+
+        // 1. Fetch Data dari Google Sheets menggunakan JSONP untuk menghindari CORS
+        function fetchData() {
+            loadingOverlay.classList.remove('hidden');
+            
+            // Membuat script tag untuk JSONP
+            const script = document.createElement('script');
+            const callbackName = 'handleDataSiswa_' + Math.round(100000 * Math.random());
+            
+            window[callbackName] = function(response) {
+                loadingOverlay.classList.add('hidden');
+                if (response && response.success) {
+                    dataSiswa = response.data;
+                    processDashboard();
+                    renderTable();
+                } else {
+                    showToast(response.message || 'Gagal memuat data dari server.', 'error');
+                }
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
+
+            script.src = `${APPS_SCRIPT_URL}?action=getStudents&callback=${callbackName}`;
+            script.onerror = () => {
+                loadingOverlay.classList.add('hidden');
+                showToast('Error koneksi. Pastikan sheet "siswa" tersedia.', 'error');
+            };
+            
+            document.body.appendChild(script);
+        }
+
+        // 2. Proses Data untuk Dashboard
+        function processDashboard() {
+            // Filter TA 26/27 atau 2627
+            const siswaTA2627 = dataSiswa.filter(s => {
+                const ta = (s.TA || '').toString().replace(/[^0-9]/g, '');
+                return ta === '2627';
+            });
+
+            const total = siswaTA2627.length;
+            const target = 650;
+            const percentage = Math.min(100, Math.round((total / target) * 100));
+
+            // Update UI Metrik
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-percent').textContent = `${percentage}%`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+            document.getElementById('stat-kurang').textContent = Math.max(0, target - total);
+
+            // Populate Filter Sekolah untuk Grafik
+            const sekolahSet = new Set(dataSiswa.map(s => s.asal_sekolah).filter(Boolean));
+            const filterSekolah = document.getElementById('filter-sekolah');
+            filterSekolah.innerHTML = '<option value="ALL">Semua Sekolah</option>';
+            Array.from(sekolahSet).sort().forEach(sek => {
+                filterSekolah.innerHTML += `<option value="${sek}">${sek}</option>`;
+            });
+
+            // Hitung Ulang Tahun Hari Ini
+            renderBirthdays();
+
+            // Hitung Kapasitas Kelas
+            renderClassCapacities();
+
+            // Render Chart
+            updateChart();
+        }
+
+        // Fitur Ulang Tahun
+        function renderBirthdays() {
+            const today = new Date();
+            const todayMonth = today.getMonth();
+            const todayDate = today.getDate();
+            const listDiv = document.getElementById('birthday-list');
+            
+            const birthdays = dataSiswa.filter(s => {
+                if (!s.tgl_lahir) return false;
+                const d = new Date(s.tgl_lahir);
+                return d.getMonth() === todayMonth && d.getDate() === todayDate;
+            });
+
+            if (birthdays.length === 0) {
+                listDiv.innerHTML = '<p class="text-gray-500 italic">Tidak ada siswa yang berulang tahun hari ini.</p>';
+            } else {
+                listDiv.innerHTML = birthdays.map(s => `
+                    <div class="flex items-center justify-between p-2 bg-white rounded border border-red-50">
+                        <div>
+                            <p class="font-bold text-gray-800">${s.nama_siswa}</p>
+                            <p class="text-xs text-gray-500">${s.kelas_go} - ${s.asal_sekolah}</p>
+                        </div>
+                        <i class="fas fa-gift text-red-300"></i>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Fitur Kapasitas Kelas
+        function renderClassCapacities() {
+            const grid = document.getElementById('class-capacity-grid');
+            const classCounts = {};
+            const classLevels = {}; // Simpan level SD/SMP/SMA untuk cek max
+
+            // Hitung jumlah per kelas
+            dataSiswa.forEach(s => {
+                if (!s.kelas_go) return;
+                const kelas = s.kelas_go.toUpperCase();
+                classCounts[kelas] = (classCounts[kelas] || 0) + 1;
+                
+                if (!classLevels[kelas]) {
+                    const tk = (s.tingkat_kelas || '').toUpperCase();
+                    classLevels[kelas] = tk.includes('SD') ? 'SD' : 'OTHER';
+                }
+            });
+
+            grid.innerHTML = '';
+            for (const [kelas, count] of Object.entries(classCounts).sort()) {
+                const isSD = classLevels[kelas] === 'SD';
+                const max = isSD ? 20 : 25;
+                const percent = (count / max) * 100;
+                
+                let bgColor = 'bg-green-50 border-green-200';
+                let textColor = 'text-green-700';
+                if (percent >= 100) {
+                    bgColor = 'bg-red-50 border-red-200';
+                    textColor = 'text-red-700';
+                } else if (percent >= 80) {
+                    bgColor = 'bg-yellow-50 border-yellow-200';
+                    textColor = 'text-yellow-700';
+                }
+
+                grid.innerHTML += `
+                    <div class="border rounded-lg p-3 text-center ${bgColor}">
+                        <p class="font-bold text-gray-800 text-sm truncate" title="${kelas}">${kelas}</p>
+                        <p class="text-xl font-black ${textColor}">${count} <span class="text-xs font-normal text-gray-500">/ ${max}</span></p>
+                    </div>
+                `;
+            }
+        }
+
+        // Fitur Grafik
+        function updateChart() {
+            const tkFilter = document.getElementById('filter-tingkat').value;
+            const sekFilter = document.getElementById('filter-sekolah').value;
+
+            // Filter Data
+            let filtered = dataSiswa.filter(s => {
+                let matchTk = tkFilter === 'ALL' || (s.tingkat_kelas || '').toUpperCase().includes(tkFilter);
+                let matchSek = sekFilter === 'ALL' || s.asal_sekolah === sekFilter;
+                return matchTk && matchSek && s.tgl_daftar;
+            });
+
+            // Group by Month (Format YYYY-MM)
+            const monthCounts = {};
+            filtered.forEach(s => {
+                const d = new Date(s.tgl_daftar);
+                if (!isNaN(d.getTime())) {
+                    const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
+                    monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1;
+                }
+            });
+
+            // Sort keys chronologically
+            const sortedMonths = Object.keys(monthCounts).sort();
+            const labels = sortedMonths.map(m => {
+                const [y, mm] = m.split('-');
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
+                return `${monthNames[parseInt(mm)-1]} ${y.slice(2)}`;
+            });
+            const data = sortedMonths.map(m => monthCounts[m]);
+
+            const ctx = document.getElementById('registrationChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Jumlah Pendaftar Baru',
+                        data: data,
+                        borderColor: '#e21c2b',
+                        backgroundColor: 'rgba(226, 28, 43, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#e21c2b',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                    }
+                }
+            });
+        }
+
+        // Tabel Data Siswa
+        function renderTable() {
+            const tbody = document.getElementById('table-body-siswa');
+            const search = document.getElementById('search-siswa').value.toLowerCase();
+            
+            const filtered = dataSiswa.filter(s => 
+                (s.nama_siswa || '').toLowerCase().includes(search) || 
+                (s.no_reg || '').toString().toLowerCase().includes(search)
+            );
+
+            tbody.innerHTML = filtered.map(s => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-900">${s.no_reg || '-'}</td>
+                    <td class="px-4 py-3 font-medium text-gray-900">${s.nama_siswa || '-'}</td>
+                    <td class="px-4 py-3 text-gray-500">${s.tingkat_kelas || '-'} <br><span class="text-xs font-bold text-gray-800">${s.kelas_go || '-'}</span></td>
+                    <td class="px-4 py-3 text-gray-500">${s.asal_sekolah || '-'}</td>
+                    <td class="px-4 py-3 text-gray-500">${s.no_hp || '-'}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick='editSiswa(${JSON.stringify(s).replace(/'/g, "&#39;")})' class="text-blue-600 hover:text-blue-900 bg-blue-50 px-3 py-1 rounded">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Navigasi UI
+        function switchTab(tabId) {
+            // Hide all
+            tabDashboard.classList.add('hidden');
+            tabDataSiswa.classList.add('hidden');
+            tabInputSiswa.classList.add('hidden');
+            
+            // Remove active class from navs
+            ['dashboard', 'data-siswa', 'input-siswa'].forEach(id => {
+                document.getElementById(`nav-${id}`).classList.remove('nav-active', 'text-gray-600');
+                document.getElementById(`nav-${id}`).classList.add('text-gray-600');
+            });
+
+            // Show target
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            activeNav.classList.add('nav-active');
+            activeNav.classList.remove('text-gray-600');
+            
+            // Update Title
+            const titles = {
+                'dashboard': 'Dashboard Overview',
+                'data-siswa': 'Database Siswa',
+                'input-siswa': 'Input / Edit Data Siswa'
+            };
+            document.getElementById('page-title').textContent = titles[tabId];
+
+            // Close mobile sidebar if open
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+        }
+
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('hidden');
+            sb.classList.toggle('absolute');
+            sb.classList.toggle('z-40');
+            sb.classList.toggle('h-full');
+        }
+
+        // Fitur Form Input & Edit
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const d = new Date(dateString);
+            if(isNaN(d.getTime())) return '';
+            return d.toISOString().split('T')[0];
+        }
+
+        function editSiswa(siswa) {
+            switchTab('input-siswa');
+            document.getElementById('form-title').textContent = `Edit Data Siswa: ${siswa.nama_siswa}`;
+            
+            // Isi form
+            document.getElementById('edit-row-id').value = siswa.row_index || ''; // Simpan index baris untuk update
+            document.getElementById('inp_no_reg').value = siswa.no_reg || '';
+            document.getElementById('inp_no_reg').readOnly = true; // No Reg jadi Primary Key, tidak boleh diubah
+            document.getElementById('inp_no_reg').classList.add('bg-gray-100');
+            
+            document.getElementById('inp_nama_siswa').value = siswa.nama_siswa || '';
+            document.getElementById('inp_tgl_lahir').value = formatDateForInput(siswa.tgl_lahir);
+            document.getElementById('inp_no_hp').value = siswa.no_hp || '';
+            document.getElementById('inp_nama_ortu').value = siswa.nama_ortu || '';
+            document.getElementById('inp_no_hp_ortu').value = siswa.no_hp_ortu || '';
+            
+            // Pilih dropdown dengan benar
+            const tk = document.getElementById('inp_tingkat_kelas');
+            tk.value = Array.from(tk.options).map(o=>o.value).includes(siswa.tingkat_kelas) ? siswa.tingkat_kelas : '';
+            
+            document.getElementById('inp_kelas_go').value = siswa.kelas_go || '';
+            document.getElementById('inp_asal_sekolah').value = siswa.asal_sekolah || '';
+            document.getElementById('inp_tgl_daftar').value = formatDateForInput(siswa.tgl_daftar);
+            document.getElementById('inp_TA').value = siswa.TA || '26/27';
+        }
+
+        function resetForm() {
+            document.getElementById('form-siswa').reset();
+            document.getElementById('form-title').textContent = 'Form Input Siswa Baru';
+            document.getElementById('edit-row-id').value = '';
+            document.getElementById('inp_no_reg').readOnly = false;
+            document.getElementById('inp_no_reg').classList.remove('bg-gray-100');
+            document.getElementById('inp_nama_PT').value = currentUser; // Kembalikan ke nama login
+        }
+
+        function submitForm(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
+            btn.disabled = true;
+
+            // Kumpulkan data
+            const payload = {
+                action: 'saveStudent',
+                row_index: document.getElementById('edit-row-id').value,
+                no_reg: document.getElementById('inp_no_reg').value,
+                tgl_lahir: document.getElementById('inp_tgl_lahir').value,
+                nama_siswa: document.getElementById('inp_nama_siswa').value,
+                no_hp: document.getElementById('inp_no_hp').value,
+                nama_ortu: document.getElementById('inp_nama_ortu').value,
+                no_hp_ortu: document.getElementById('inp_no_hp_ortu').value,
+                kelas_go: document.getElementById('inp_kelas_go').value,
+                tingkat_kelas: document.getElementById('inp_tingkat_kelas').value,
+                asal_sekolah: document.getElementById('inp_asal_sekolah').value,
+                tgl_daftar: document.getElementById('inp_tgl_daftar').value,
+                nama_PT: document.getElementById('inp_nama_PT').value,
+                TA: document.getElementById('inp_TA').value
+            };
+
+            // URL Encode data (Menghindari masalah CORS preflight JSON saat POST)
+            const formBody = Object.keys(payload).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(payload[key])).join('&');
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formBody
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    showToast('Data berhasil disimpan!', 'success');
+                    resetForm();
+                    fetchData(); // Reload data dari server
+                } else {
+                    showToast('Gagal menyimpan: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Terjadi kesalahan jaringan.', 'error');
+            })
+            .finally(() => {
+                btn.innerHTML = '<i class="fas fa-save mr-2"></i> Simpan Data';
+                btn.disabled = false;
+            });
+        }
+
+        // Utilities
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msgObj = document.getElementById('toast-msg');
+            msgObj.textContent = message;
+            
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 flex items-center ${
+                type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+            }`;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+
+        function logout() {
+            if(confirm('Yakin ingin keluar?')) {
+                // Di dunia nyata, hapus session/token di sini
+                // window.location.href = 'index.html'; 
+                alert('Simulasi: Kembali ke Halaman Login');
+            }
+        }
+    </script>
+</body>
+</html>
