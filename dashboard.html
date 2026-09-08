@@ -739,7 +739,6 @@
 
             if (!isSuperUser) return;
             
-            // Ambil nama_PT unik dari data siswa
             const ptSet = new Set(dataSiswa.map(s => s.nama_PT || s.nama_pt).filter(Boolean));
             if (filterPtSelect) {
                 filterPtSelect.innerHTML = '<option value="ALL">Semua PT</option>';
@@ -754,10 +753,7 @@
             let activeNilai = dataNilai100;
 
             if (!isSuperUser) {
-                activeSiswa = dataSiswa.filter(s => {
-                    const sPt = String(s.nama_PT || s.nama_pt || '').trim().toLowerCase();
-                    return sPt === String(currentUser).trim().toLowerCase();
-                });
+                activeSiswa = dataSiswa.filter(s => String(s.nama_PT || s.nama_pt || '').trim().toLowerCase() === String(currentUser).trim().toLowerCase());
                 const regSet = new Set(activeSiswa.map(s => String(s.no_reg).trim()));
                 activeNilai = dataNilai100.filter(n => regSet.has(String(n.no_reg).trim()));
             } else {
@@ -802,56 +798,6 @@
 
             renderMBETable(activeSiswa, nilaiMap);
             renderNilai100Table(activeSiswa, activeNilai);
-        }
-        }
-
-        function renderNilai100Tab() {
-            let activeSiswa = dataSiswa;
-            let activeNilai = dataNilai100;
-
-            if (!isSuperUser) {
-                activeSiswa = dataSiswa.filter(s => String(s.nama_PT || '').trim().toLowerCase() === String(currentUser).trim().toLowerCase());
-                const regSet = new Set(activeSiswa.map(s => String(s.no_reg).trim()));
-                activeNilai = dataNilai100.filter(n => regSet.has(String(n.no_reg).trim()));
-            } else {
-                const selectedPT = document.getElementById('filter-pt-nilai')?.value || 'ALL';
-                const selectedKelas = document.getElementById('filter-kelas-nilai')?.value || 'ALL';
-
-                if (selectedPT !== 'ALL') {
-                    activeSiswa = activeSiswa.filter(s => String(s.nama_PT || '').trim() === selectedPT);
-                }
-                if (selectedKelas !== 'ALL') {
-                    activeSiswa = activeSiswa.filter(s => String(s.kelas_go || '').trim() === selectedKelas);
-                }
-                const regSet = new Set(activeSiswa.map(s => String(s.no_reg).trim()));
-                activeNilai = dataNilai100.filter(n => regSet.has(String(n.no_reg).trim()));
-            }
-
-            const totalSiswa = activeSiswa.length;
-            let totalAkumulasi = 0;
-            let sudahDapat = 0;
-
-            const nilaiMap = {};
-            activeNilai.forEach(n => {
-                const nReg = String(n.no_reg || n.No_Reg || '').trim();
-                nilaiMap[nReg] = n;
-                
-                const rawAkum = n.akumulasi_nilai_100 ?? n.Akumulasi_Nilai_100 ?? n['Akumulasi Nilai 100'] ?? 0;
-                const akum = parseInt(rawAkum) || 0;
-                
-                totalAkumulasi += akum;
-                if (akum > 0) sudahDapat++;
-            });
-
-            const belumDapat = Math.max(0, totalSiswa - sudahDapat);
-
-            document.getElementById('stat-n100-total').textContent = totalSiswa;
-            document.getElementById('stat-n100-akumulasi').textContent = totalAkumulasi;
-            document.getElementById('stat-n100-sudah').textContent = sudahDapat;
-            document.getElementById('stat-n100-mbe').textContent = belumDapat;
-
-            renderMBETable(activeSiswa, nilaiMap);
-            renderNilai100Table(activeSisiwa = activeSiswa, activeNilai);
         }
 
         function renderMBETable(siswaList, nilaiMap) {
